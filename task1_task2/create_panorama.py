@@ -199,7 +199,7 @@ def create_panorama_recursive(canvas, pre_H, imgs, eight_points_list, frame):
         eight_points_l = eight_points_list
         curr_img = images[frame].get_background()
         eight_points = eight_points_l[frame]
-        curr_pts = np.float32(eight_points[0:4])
+        curr_pts = np.float32(((0, 0), (0, 464), (240, 0), (240, 464)))
         mode_mvs = scipy.stats.mode(np.array(eight_points[4:8])).mode[0]
         curr_mvs = np.float32([mode_mvs, mode_mvs, mode_mvs, mode_mvs])
         #curr_pts = np.float32(((0, 0), (0, 464), (240, 0), (240, 464)))
@@ -252,6 +252,8 @@ canvas = original_imgs[0].get_background()
 res = create_panorama_recursive(canvas, H, original_imgs[1:len(original_imgs)], eight_points_list, 0)
 print(res.shape)
 cv2_imshow(res)
+
+cv2.imwrite("panorama_SAL.jpg", res)
 
 def create_panorama_recursive2(old_canvas, pre_H, imgs, eight_points_list, frame):
     if frame == 100:
