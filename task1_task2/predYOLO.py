@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from imageDisplay2 import RGBImage, block_size
 
-file_path = 'video/test1.mp4'
+file_path = 'video/test2.mp4'
 
 
 class PersonDetection:
@@ -41,7 +41,6 @@ class PersonDetection:
             self.frames[i] = resized
         print(self.frames[0].shape)
 
-
     def calc_frame(self, frame):
         self.model.to(self.device)
         res = self.model([frame])
@@ -52,7 +51,17 @@ class PersonDetection:
     def get_label(self, x):
         return self.classes[int(x)]
 
-    def plot_boxes(self, label, cord, frame):
+    def plot_boxes(self, frame):
+        x_shape, y_shape = frame.shape[1] // block_size, frame.shape[0] // block_size
+        new_frame = np.copy(frame)
+        for i in range(x_shape - 1):
+            for j in range(y_shape - 1):
+                x1, y1, x2, y2 = int(i * block_size), int(j * block_size), int((i + 1) * block_size), int((j+1) * block_size)
+                bgr = (0, 255, 0)
+                cv2.rectangle(new_frame, (x1, y1), (x2, y2), bgr, 1)
+        return new_frame
+
+    def plot_label_boxes(self, label, cord, frame):
         n = len(label)
         x_shape, y_shape = frame.shape[1], frame.shape[0]
         new_frame = np.copy(frame)
@@ -75,7 +84,7 @@ class PersonDetection:
             label, cord = self.calc_frame(frame)
             self.labels.append(label)
             self.cords.append(cord)
-            # new_frame = self.plot_boxes(label, cord, frame)
+            # new_frame = self.plot_boxes(frame)
             # self.frames[i] = new_frame
 
     def display(self, frame_num):
@@ -100,7 +109,8 @@ class PersonDetection:
                 r = cord[j]
                 if label[j] == 0 and r[4] > .3:
                     x1, y1, x2, y2 = int(r[0] * block_width), int(r[1] * block_height), \
-                                     int(r[2] * block_width), int(r[3] * block_height)
+                                     min(int(r[2] * block_width)+1, block_width), \
+                                     min(int(r[3] * block_height)+1, block_height)
                     for y in range(y1, y2):
                         for x in range(x1, x2):
                             block_arr[y, x] = label_num
@@ -113,7 +123,7 @@ class PersonDetection:
 def get_pano(imgs):
     bgs = []
     for i in range(len(imgs)):
-        if i%40 == 0:
+        if i % 40 == 0:
             bgs.append(imgs[i].get_background())
     stitcher = cv2.Stitcher.create(cv2.Stitcher_PANORAMA)
     status, pano = stitcher.stitch(bgs)
@@ -131,9 +141,9 @@ if __name__ == '__main__':
     pd.resize(480, 272)
     pd.run()
     imgs = pd.get_rgbimages()
-    get_pano(imgs)
-    # for i in imgs:
-    #     i.display(300)
+    for i, v in enumerate(imgs):
+        v.display(100)
+    # get_pano(imgs)
     # bg = imgs[0].get_background()
     # cv2.imshow('img', bg)
     # cv2.waitKey(0)
