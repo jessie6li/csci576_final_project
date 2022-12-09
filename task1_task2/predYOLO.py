@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from imageDisplay2 import RGBImage, block_size
 
-file_path = 'SAL.mp4'
+file_path = 'video/test1.mp4'
 
 
 class PersonDetection:
@@ -113,8 +113,8 @@ class PersonDetection:
 def get_pano(imgs):
     bgs = []
     for i in range(len(imgs)):
-        if i%50 == 0:
-            bgs.append(imgs[i].get_original_bgr_array())
+        if i%40 == 0:
+            bgs.append(imgs[i].get_background())
     stitcher = cv2.Stitcher.create(cv2.Stitcher_PANORAMA)
     status, pano = stitcher.stitch(bgs)
 
@@ -128,11 +128,12 @@ def get_pano(imgs):
 
 if __name__ == '__main__':
     pd = PersonDetection(file_path)
-    pd.resize(490, 270)
+    pd.resize(480, 272)
     pd.run()
     imgs = pd.get_rgbimages()
-    for i in imgs:
-        i.display(300)
+    get_pano(imgs)
+    # for i in imgs:
+    #     i.display(300)
     # bg = imgs[0].get_background()
     # cv2.imshow('img', bg)
     # cv2.waitKey(0)

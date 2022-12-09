@@ -1,6 +1,7 @@
 from predYOLO import PersonDetection
 import cv2
-
+from create_panorama2 import create_panorama_recursive, create_panorama_recursive_key_frame
+from foo import eight_point2
 
 class Generation:
     width = 480
@@ -17,7 +18,11 @@ class Generation:
         Panorama Generation
         :return:
         """
-        pass
+        H = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+        canvas = self.images[0].get_background()
+        eight_points_list = eight_point2
+        res = create_panorama_recursive(canvas, H, self.images[1:len(self.images)], eight_points_list, 0, 0, 0)
+        cv2.imwrite('output/output1.jpg', res)
 
     def output2(self, mode=0):
         """
@@ -48,21 +53,18 @@ class Generation:
         the correctness of the blending process to create a motion trail.
         :return:
         """
-        imgs = []
-        for i in range(len(self.images)):
-            if i % 50 == 0:
-                imgs.append(self.images[i].get_original_bgr_array())
-            else:
-                imgs.append(self.images[i].get_background())
 
-        # todo
-
+        H = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+        canvas = self.images[0].get_background()
+        eight_points_list = eight_point2
+        res = create_panorama_recursive_key_frame(canvas, H, self.images[1:len(self.images)], eight_points_list,
+                                                  0, 0, 0, 60)
         if mode == 1:
-            cv2.imshow('img', pano)
+            cv2.imshow('img', res)
             cv2.waitKey(0)
             cv2.destroyAllWindows()
         else:
-            pass
+            cv2.imwrite('output/output3.jpg', res)
 
     def output4(self):
         """
@@ -81,5 +83,5 @@ class Generation:
         pass
 
 if __name__ == '__main__':
-    g = Generation('video/test1.mp4')
-    g.output2()
+    g = Generation('video/test2.mp4')
+    g.output3()
