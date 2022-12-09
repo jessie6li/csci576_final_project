@@ -50,6 +50,18 @@ class RGBImage:
 
         return arr
 
+    def get_foreground(self):
+        arr = np.copy(self.bgr_arr)
+        for i in range(self.block_height):
+            for j in range(self.block_width):
+                y1, x1, y2, x2 = i * block_size, j * block_size, (i + 1) * block_size, (j + 1) * block_size
+                label = self.block_arr[i, j]
+                if not label:
+                    bgr = (0, 0, 0)
+                    cv2.fillPoly(arr, [np.array([[x1, y1], [x2, y1], [x2, y2], [x1, y2]])], bgr)
+
+        return arr
+
     def get_macro_block_label(self) -> np.array:
         """
 
@@ -73,7 +85,7 @@ class RGBImage:
 
         :return:
         """
-        return self.bgr_arr
+        return np.copy(self.bgr_arr)
 
     def get_motion_vector(self, label) -> '(dy, dx)':
         """
