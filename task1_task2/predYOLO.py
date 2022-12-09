@@ -1,8 +1,9 @@
-import math
+import math, pickle
 import cv2
 import numpy as np
 import torch
 from imageDisplay2 import RGBImage, block_size
+from pathlib import Path
 
 file_path = 'video/test2.mp4'
 
@@ -10,13 +11,26 @@ file_path = 'video/test2.mp4'
 class PersonDetection:
 
     def __init__(self, video_path):
-        self.cords = []
-        self.labels = []
+        p = Path(video_path)
+        self.cache_path = 'cache' / p.with_suffix('')
+        self.label_path = self.cache_path / 'labels.pkl'
+        self.cord_path = self.cache_path / 'cords.pkl'
+        if self.cache_path.exists():
+            self.use_cache = True
+            with open(self.label_path, 'rb') as f:
+                self.labels = pickle.load(f)
+            with open(self.cord_path, 'rb') as f:
+                self.cords = pickle.load(f)
+            print('Using cache')
+        else:
+            self.use_cache = False
+            self.cords = []
+            self.labels = []
+            self.model = self._load_model()
+            self.classes = self.model.names
+            self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+            print('Using', self.device)
         self.frames = self._load_frames(video_path)
-        self.model = self._load_model()
-        self.classes = self.model.names
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        print('Using', self.device)
 
     def _load_model(self):
         model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
@@ -75,7 +89,8 @@ class PersonDetection:
         return new_frame
 
     def run(self):
-
+        if self.use_cache:
+            return
         n = len(self.frames)
         for i in range(n):
             if i % 50 == 0:
@@ -86,6 +101,11 @@ class PersonDetection:
             self.cords.append(cord)
             # new_frame = self.plot_boxes(frame)
             # self.frames[i] = new_frame
+        self.cache_path.mkdir(parents=True,exist_ok=True)
+        with open(self.label_path, 'wb') as f:
+            pickle.dump(self.labels, f)
+        with open(self.cord_path, 'wb') as f:
+            pickle.dump(self.cords, f)
 
     def display(self, frame_num):
         cv2.imshow("img", self.frames[frame_num])
@@ -142,7 +162,7 @@ if __name__ == '__main__':
     pd.run()
     imgs = pd.get_rgbimages()
     for i, v in enumerate(imgs):
-        v.display(100)
+        v.display(20)
     # get_pano(imgs)
     # bg = imgs[0].get_background()
     # cv2.imshow('img', bg)
